@@ -1,0 +1,66 @@
+The task: develop a file system based on Chord
+what is chord: peer to peer distributed hash table
+			   stores key-value pairs by assigning keys to different computers (nodes) 
+			   node wills store all the values for all the keys for which it is responsible
+
+A data structure called metadata will store all the descriptions of the files
+	attributes are:
+					file name
+					size
+					read/write timestamp
+					reference count (number of processes that have the file open
+					number of pages (chunks)
+					size of the pages
+					description of each pages
+
+All files stored using a GUID
+	this is the key obtained by applying MD5
+
+md5(unique feature)
+	unique feature -> file name concactenated with the timestamp
+	meta data will be stored on the p2p using static name metadata -> i.e. md5("MetaData")
+	refer to all files in the distributed system as a distributed file, all files in the hard disk as physical files
+	refer to the "file" key value in Metadata as JSONFile
+	
+In all operations, first step is to read metadata from chord
+				   parse and apply the changes if needed
+				   write back metadata accordingly
+		we can say that meta data is a local file when you read the meta data and global if it is in the chord
+		distributed file system must support:
+			Creation(filename) -> when a new DF is created, a new JSONfile is created in metadata with the values initialized accordingly including the timestamsps, 
+								  size of the file and number of pages must be 0 and stored globally
+								  metadata.addFile(filename)
+			Delete(filename): Delete the distributed file (including pages and data)
+							  delete JSONFile with key filename from MetaData
+							  That is, for each page "k" of "filename"
+								p = peer.locateSuccessor(k)
+								p.delete(k)
+							  Then you can delete the entry in metadata
+							  metadata.delete(filename)
+			He lists the rest in the assignment all pretty self explanatory
+
+Must be a command line interface that runs at the server side that allows to execute the previous commands
+	command line interface is used to add files and setting up DF system
+	
+Music streaming server must read the files from DFS to serve the requests
+	to simplify rthe task, each node of the Chord can implement the server	
+	you need to randomly split the music.json into several pieces to create the distributed file
+	
+To set up the system, must run at least three process using different ports
+	each process runs an instance of the chord and your server 
+	
+Suppose your program is called DFS and accepts one parameter
+	first port will listen, then run the program using command line
+	i.e. DFS 2000
+		 DFS 2001
+		 DFS 2002
+	in the CMLI of peer with port 2001 you join peer 2000
+	in the CMLI of peer with port 2002 you join peer 2000 or 2001
+	
+	This proccess creates a ring of size three
+	Suppose you split music.json in the files -> localmusic1.json, localmusic2.json....
+	in the CMDL of any peer you create music as:
+		append music.json.localmusic1.java
+		append music.json.localmusic1.java
+		...
+		
